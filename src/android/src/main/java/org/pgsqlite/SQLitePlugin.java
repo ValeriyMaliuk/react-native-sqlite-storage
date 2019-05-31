@@ -405,14 +405,24 @@ public class SQLitePlugin extends ReactContextBaseJavaModule {
                     in = this.getContext().getAssets().open(assetFilePath);
                     Log.v("info", "Located pre-populated DB asset in app bundle subdirectory: " + assetFilePath);
                 } else {
-                    File filesDir = this.getContext().getFilesDir();
-                    assetFilePath = assetFilePath.startsWith("/") ? assetFilePath.substring(1) : assetFilePath;
-                    File assetFile = new File(filesDir, assetFilePath);
-                    in = new FileInputStream(assetFile);
-                    Log.v("info", "Located pre-populated DB asset in Files subdirectory: " + assetFile.getCanonicalPath());
-                    if (openFlags == SQLiteDatabase.OPEN_READONLY) {
+                    File [] externalFilesDirs = this.getContext().getExternalFilesDirs(null);
+
+                    //cycle through external directories (primary and secondary external storage)
+                    for (File dir: externalFilesDirs) {
+                        Log.v("info", "Trying to find sqlite db in : " + dir.getAbsolutePath());
+                        assetFilePath = assetFilePath.startsWith("/") ? assetFilePath.substring(1) : assetFilePath;
+                        File assetFile = new File(dir, assetFilePath);
+
+                        //skip dir if it has no db
+                        if (!assetFile.exists()) {
+                            continue;
+                        }
+
+                        //db found
+                        in = new FileInputStream(assetFile);
+                        Log.v("info", "Located pre-populated DB asset in Files subdirectory: " + assetFile.getCanonicalPath());
                         dbfile = assetFile;
-                        Log.v("info", "Detected read-only mode request for external asset.");
+                        break;
                     }
                 }
             }
