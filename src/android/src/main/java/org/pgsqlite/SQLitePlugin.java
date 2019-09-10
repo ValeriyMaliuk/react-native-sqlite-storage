@@ -437,7 +437,26 @@ public class SQLitePlugin extends ReactContextBaseJavaModule {
                 }
 
                 if (!dbfile.exists()) {
-                    dbfile.getParentFile().mkdirs();
+                    Log.v("info", "Create DB on SDcard");
+                    File [] externalFilesDirs = this.getContext().getExternalFilesDirs(null);
+
+                    File sdCard = null;
+                    //cycle through external directories (primary and secondary external storage)
+                    for (File dir: externalFilesDirs) {
+                        Log.v("info", "Maybe " + dir.getAbsolutePath() + " ?");
+                        if (!dir.getAbsolutePath().contains("emulated")) {
+                            sdCard = dir;
+                            Log.v("info", "SD card path :" + dir.getAbsolutePath());
+                            break;
+                        }
+                    }
+                    if (sdCard == null && externalFilesDirs.length != 0) {
+                        sdCard = externalFilesDirs[0];
+                        Log.v("info", "Couldn't find SD card path, set :" + sdCard.getAbsolutePath());
+                    }
+                    assetFilePath = assetFilePath.startsWith("/") ? assetFilePath.substring(1) : assetFilePath;
+                    dbfile = new File(sdCard, assetFilePath);
+                    Log.v("info", "Full path to DB :" + dbfile.getAbsolutePath());
                 }
             }
 
